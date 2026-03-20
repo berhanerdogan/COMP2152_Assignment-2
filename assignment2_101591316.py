@@ -139,14 +139,16 @@ class PortScanner(NetworkTool):
         except sqlite3.Error as e:
             print(f"Database Error: {e}")
 
-
-# TODO: Create load_past_scans() function (Step viii)
-# - Connect to scan_history.db
-# - SELECT all from scans
-# - Print each row in readable format
-# - Handle missing table/db: print "No past scans found."
-# - Close connection
-
+    def load_past_scans():
+        try:
+            with sqlite3.connect(DB_NAME) as conn:
+                cursor = conn.cursor()
+                result = cursor.execute("SELECT * FROM scans")
+                past_scans = result.fetchall()
+                for target, port, status, service, scan_date in past_scans:
+                    print(f"[{scan_date}] {target} : Port {port} ({service}) - {status}")
+        except sqlite3.Error:
+            print("No past scans found.")
 
 # ============================================================
 # MAIN PROGRAM
