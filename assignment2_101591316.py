@@ -103,13 +103,15 @@ class PortScanner(NetworkTool):
 # Scanning ports one at a time means waiting for each connection timeout before moving to the next,
 # but With t hreading, all ports are scanned simultaneously
 
-
-# - scan_range(self, start_port, end_port):
-#     - Create threads list
-#     - Create Thread for each port targeting scan_port
-#     - Start all threads (one loop)
-#     - Join all threads (separate loop)
-
+    def scan_range(self, start_port, end_port):
+        
+        threads = []
+        for port in range(start_port, end_port):
+            t = threading.Thread(target=self.scan_port, args=(port,))
+            threads.append(t)
+        
+        for t in threads: t.start()
+        for t in threads: t.join()  
 
 # TODO: Create save_results(target, results) function (Step vii)
 # - Connect to scan_history.db
