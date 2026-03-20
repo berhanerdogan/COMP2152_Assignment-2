@@ -11,7 +11,7 @@ from assignment2_101591316 import PortScanner, common_ports
 class TestPortScanner(unittest.TestCase):
 
     def test_scanner_initialization(self):
-        
+
         """Test that PortScanner initializes with correct target and empty results list."""
         
         scanner = PortScanner("127.0.0.1")
@@ -24,12 +24,17 @@ class TestPortScanner(unittest.TestCase):
         self.assertFalse(results)
 
     def test_get_open_ports_filters_correctly(self):
+
         """Test that get_open_ports returns only Open ports."""
-        # TODO: Create a PortScanner object
-        # TODO: Manually add these tuples to scanner.scan_results:
-        #   (22, "Open", "SSH"), (23, "Closed", "Telnet"), (80, "Open", "HTTP")
-        # TODO: Call get_open_ports() and assert the returned list has exactly 2 items
-        pass
+
+        scanner = PortScanner("127.0.0.1")
+        scanner.scan_results = [
+            (22, "Open", "SSH"),
+            (23, "Closed", "Telnet"),
+            (80, "Open", "HTTP")
+        ]
+        result = scanner.get_open_ports()
+        self.assertEqual(len(result), 2)
 
     def test_common_ports_dict(self):
         """Test that common_ports dictionary has correct entries."""

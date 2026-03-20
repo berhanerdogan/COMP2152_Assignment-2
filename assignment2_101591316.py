@@ -78,29 +78,32 @@ class PortScanner(NetworkTool):
 # Without try-except, if a port scan fails or the connection is refused,
 # the program would crash completely and stop scanning the remaining ports.
 
-def scan_port(self, port):
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # sock. → socket.
-        sock.settimeout(1)
-        result = sock.connect_ex((self.target, port))
-        status = "OPEN" if result == 0 else "CLOSED"
-        name = common_ports[port] if port in common_ports else "Unknown"
-        print(f"{port} is {status}")
-        print(f"Service Name: {name}")
-        with self.lock:
-            self.scan_results.append((port, status, name))
-    except socket.error as e:
-        print(f"Error scanning port {port}: {e}")
-    finally:
-        sock.close()
+    def scan_port(self, port):
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # sock. → socket.
+            sock.settimeout(1)
+            result = sock.connect_ex((self.target, port))
+            status = "Open" if result == 0 else "Closed"
+            name = common_ports[port] if port in common_ports else "Unknown"
+            print(f"{port} is {status.upper()}")
+            print(f"Service Name: {name}")
+            with self.lock:
+                self.scan_results.append((port, status, name))
+        except socket.error as e:
+            print(f"Error scanning port {port}: {e}")
+        finally:
+            sock.close()
+
+    def get_open_ports(self):
+        results = self.scan_results
+        open_ports = [port for port, status, name in results if status == "OPEN"]
+        return open_ports
+    
+# Q2: Why do we use threading instead of scanning one port at a time?
+# Scanning ports one at a time means waiting for each connection timeout before moving to the next,
+# but With t hreading, all ports are scanned simultaneously
 
 
-# - get_open_ports(self):
-#     - Use list comprehension to return only "Open" results
-#
-#     Q2: Why do we use threading instead of scanning one port at a time?
-#     TODO: Your 2-4 sentence answer here... (Part 2, Q2)
-#
 # - scan_range(self, start_port, end_port):
 #     - Create threads list
 #     - Create Thread for each port targeting scan_port
