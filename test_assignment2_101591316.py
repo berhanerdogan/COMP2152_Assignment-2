@@ -4,7 +4,6 @@ Unit Tests for Assignment 2 — Port Scanner
 
 import unittest
 
-# TODO: Import your classes and common_ports from assignment2_studentID
 from assignment2_101591316 import PortScanner, common_ports
 
 
@@ -37,17 +36,24 @@ class TestPortScanner(unittest.TestCase):
         self.assertEqual(len(result), 2)
 
     def test_common_ports_dict(self):
+
         """Test that common_ports dictionary has correct entries."""
-        # TODO: Assert common_ports[80] equals "HTTP"
-        # TODO: Assert common_ports[22] equals "SSH"
-        pass
+
+        http = "HTTP"
+        ssh = "SSH"
+
+        self.assertEqual(common_ports[80], http)
+        self.assertEqual(common_ports[22], ssh)
+
 
     def test_invalid_target(self):
+        
         """Test that setter rejects empty string target."""
-        # TODO: Create a PortScanner with target "127.0.0.1"
-        # TODO: Try setting scanner.target = "" (empty string)
-        # TODO: Assert scanner.target is still "127.0.0.1"
-        pass
+        
+        scanner = PortScanner("127.0.0.1")
+        with self.assertRaises(ValueError):
+            scanner.target = ""
+        self.assertEqual(scanner.target, "127.0.0.1")
 
 
 if __name__ == "__main__":

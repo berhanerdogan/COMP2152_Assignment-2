@@ -99,7 +99,7 @@ class PortScanner(NetworkTool):
 
     def get_open_ports(self):
         results = self.scan_results
-        open_ports = [port for port, status, name in results if status == "OPEN"]
+        open_ports = [port for port, status, name in results if status == "Open"]
         return open_ports
     
 # Q2: Why do we use threading instead of scanning one port at a time?
@@ -153,25 +153,40 @@ class PortScanner(NetworkTool):
 # ============================================================
 # MAIN PROGRAM
 # ============================================================
+
 if __name__ == "__main__":
-    pass
-    # TODO: Get user input with try-except (Step ix)
-    # - Target IP (default "127.0.0.1" if empty)
-    # - Start port (1-1024)
-    # - End port (1-1024, >= start port)
-    # - Catch ValueError: "Invalid input. Please enter a valid integer."
-    # - Range check: "Port must be between 1 and 1024."
+    try:
+        target = input("Enter target IP (default 127.0.0.1): ").strip()
+        if not target:
+            target = "127.0.0.1"
 
-    # TODO: After valid input (Step x)
-    # - Create PortScanner object
-    # - Print "Scanning {target} from port {start} to {end}..."
-    # - Call scan_range()
-    # - Call get_open_ports() and print results
-    # - Print total open ports found
-    # - Call save_results()
-    # - Ask "Would you like to see past scan history? (yes/no): "
-    # - If "yes", call load_past_scans()
+        start = int(input("Enter start port (1-1024): "))
+        end = int(input("Enter end port (1-1024): "))
 
+        if not (1 <= start <= 1024) or not (1 <= end <= 1024):
+            print("Port must be between 1 and 1024.")
+        elif end < start:
+            print("End port must be greater than or equal to start port.")
+        else:
+            scanner = PortScanner(target)
+            print(f"Scanning {target} from port {start} to {end}...")
+            scanner.scan_range(start, end)
+
+            open_ports = scanner.get_open_ports()
+            print(f"\n--- Scan Results for {target} ---")
+            for port, status, service in open_ports:
+                print(f"Port {port}: {status} ({service})")
+            print("------")
+            print(f"Total open ports found: {len(open_ports)}")
+
+            scanner.save_results(target, scanner.scan_results)
+
+            history = input("Would you like to see past scan history? (yes/no): ").strip()
+            if history == "yes":
+                scanner.load_past_scans()
+
+    except ValueError:
+        print("Invalid input. Please enter a valid integer.")
 
 # Q5: New Feature Proposal
 # TODO: Your 2-3 sentence description here... (Part 2, Q5)
