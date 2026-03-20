@@ -5,17 +5,23 @@ Unit Tests for Assignment 2 — Port Scanner
 import unittest
 
 # TODO: Import your classes and common_ports from assignment2_studentID
-# from assignment2_studentID import PortScanner, common_ports
+from assignment2_101591316 import PortScanner, common_ports
 
 
 class TestPortScanner(unittest.TestCase):
 
     def test_scanner_initialization(self):
+        
         """Test that PortScanner initializes with correct target and empty results list."""
-        # TODO: Create a PortScanner with target "127.0.0.1"
-        # TODO: Assert scanner.target equals "127.0.0.1"
-        # TODO: Assert scanner.scan_results is an empty list
-        pass
+        
+        scanner = PortScanner("127.0.0.1")
+        target = scanner.target
+        realTaret = "127.0.0.1"
+        results = scanner.scan_results
+
+        self.assertIsInstance(scanner, PortScanner)
+        self.assertEqual(target, realTaret)
+        self.assertFalse(results)
 
     def test_get_open_ports_filters_correctly(self):
         """Test that get_open_ports returns only Open ports."""

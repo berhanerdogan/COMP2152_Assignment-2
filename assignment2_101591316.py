@@ -1,50 +1,100 @@
 """
-Author: <YOUR REAL FIRST AND LAST NAME>
+Author: Berhan Erdogan
 Assignment: #2
 Description: Port Scanner — A tool that scans a target machine for open network ports
 """
 
-# TODO: Import the required modules (Step ii)
-# socket, threading, sqlite3, os, platform, datetime
+import socket
+import threading
+import sqlite3
+import sys
+import os
+import platform
+import datetime
 
 
-# TODO: Print Python version and OS name (Step iii)
+# Print Python version and OS name (Step iii)
+version = sys.version
+system = platform.system()
+print(f"Python Version : {version}")
+print(f"Operating System: {system}")
 
+# Create the common_ports dictionary (Step iv)
+# This dictionary maps commonly used port numbers to their service names.
+common_ports = {
+    21: "FTP",
+    22: "SSH",
+    23: "Telnet",
+    25: "SMTP",
+    53: "DNS",
+    80: "HTTP",
+    110: "POP3",
+    143: "IMAP",
+    443: "HTTPS",
+    3306: "MySQL",
+    3389: "RDP",
+    8080: "HTTP-Alt"
+}
 
-# TODO: Create the common_ports dictionary (Step iv)
-# Add a 1-line comment above it explaining what it stores
+class NetworkTool:
+    def __init__(self, target):
+        self.__target = target
 
-
-# TODO: Create the NetworkTool parent class (Step v)
-# - Constructor: takes target, stores as private self.__target
-# - @property getter for target
-# - @target.setter with empty string validation
-# - Destructor: prints "NetworkTool instance destroyed"
+    @property
+    def target(self):
+        return self.__target
+    
+    @target.setter
+    def target(self, target):
+        if not target or not target.strip():
+            raise ValueError("Target cannot be empty")
+        self.__target = target
+    
+    def __del__(self):
+        print("NetworkTool instance destroyed")
 
 
 # Q3: What is the benefit of using @property and @target.setter?
-# TODO: Your 2-4 sentence answer here... (Part 2, Q3)
-
+# @property and @target.setter gives control over how attributes are read and written,
+# instead of allowing direct access. Bad data can be prevented with validation.
 
 # Q1: How does PortScanner reuse code from NetworkTool?
-# TODO: Your 2-4 sentence answer here... (Part 2, Q1)
+# PortScanner calls super().__init__() to run NetworkTool's setup,
+# and automatically inherits @property, setter, and validation 
 
 # TODO: Create the PortScanner child class that inherits from NetworkTool (Step vi)
-# - Constructor: call super().__init__(target), initialize self.scan_results = [], self.lock = threading.Lock()
-# - Destructor: print "PortScanner instance destroyed", call super().__del__()
-#
-# - scan_port(self, port):
-#     Q4: What would happen without try-except here?
-#     TODO: Your 2-4 sentence answer here... (Part 2, Q4)
-#
-#     - try-except with socket operations
-#     - Create socket, set timeout, connect_ex
-#     - Determine Open/Closed status
-#     - Look up service name from common_ports (use "Unknown" if not found)
-#     - Acquire lock, append (port, status, service_name) tuple, release lock
-#     - Close socket in finally block
-#     - Catch socket.error, print error message
-#
+
+class PortScanner(NetworkTool):
+    def __init__(self, target):
+        super().__init__(target)
+        self.scan_results = []
+        self.lock = threading.Lock()
+
+    def __del__(self):
+        super().__del__()
+        print("PortScanner instance destroyed")
+
+# Q4: What would happen without try-except here?
+# Without try-except, if a port scan fails or the connection is refused,
+# the program would crash completely and stop scanning the remaining ports.
+
+def scan_port(self, port):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # sock. → socket.
+        sock.settimeout(1)
+        result = sock.connect_ex((self.target, port))
+        status = "OPEN" if result == 0 else "CLOSED"
+        name = common_ports[port] if port in common_ports else "Unknown"
+        print(f"{port} is {status}")
+        print(f"Service Name: {name}")
+        with self.lock:
+            self.scan_results.append((port, status, name))
+    except socket.error as e:
+        print(f"Error scanning port {port}: {e}")
+    finally:
+        sock.close()
+
+
 # - get_open_ports(self):
 #     - Use list comprehension to return only "Open" results
 #
