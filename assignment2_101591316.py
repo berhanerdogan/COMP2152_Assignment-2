@@ -13,13 +13,12 @@ import platform
 import datetime
 
 
-# Print Python version and OS name (Step iii)
+
 version = sys.version
 system = platform.system()
 print(f"Python Version : {version}")
 print(f"Operating System: {system}")
 
-# Create the common_ports dictionary (Step iv)
 # This dictionary maps commonly used port numbers to their service names.
 common_ports = {
     21: "FTP",
@@ -36,10 +35,16 @@ common_ports = {
     8080: "HTTP-Alt"
 }
 
+DB_NAME = "scan_history.db"
+
+
 class NetworkTool:
     def __init__(self, target):
         self.__target = target
 
+    # Q3: What is the benefit of using @property and @target.setter?
+    # @property and @target.setter gives control over how attributes are read and written,
+    # instead of allowing direct access. Bad data can be prevented with validation.
     @property
     def target(self):
         return self.__target
@@ -54,44 +59,40 @@ class NetworkTool:
         print("NetworkTool instance destroyed")
 
 
-# Q3: What is the benefit of using @property and @target.setter?
-# @property and @target.setter gives control over how attributes are read and written,
-# instead of allowing direct access. Bad data can be prevented with validation.
+
 
 # Q1: How does PortScanner reuse code from NetworkTool?
 # PortScanner calls super().__init__() to run NetworkTool's setup,
 # and automatically inherits @property, setter, and validation 
-
-# TODO: Create the PortScanner child class that inherits from NetworkTool (Step vi)
-
 class PortScanner(NetworkTool):
-
-    DB_NAME = "scan_history.db"
 
     def __init__(self, target):
         super().__init__(target)
         self.scan_results = []
         self.lock = threading.Lock()
 
+
     def __del__(self):
         super().__del__()
         print("PortScanner instance destroyed")
 
-# Q4: What would happen without try-except here?
-# Without try-except, if a port scan fails or the connection is refused,
-# the program would crash completely and stop scanning the remaining ports.
+
 
     def scan_port(self, port):
+
+        # Q4: What would happen without try-except here?
+        # Without try-except, if a port scan fails or the connection is refused,
+        # the program would crash completely and stop scanning the remaining ports.
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # sock. → socket.
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
             result = sock.connect_ex((self.target, port))
             status = "Open" if result == 0 else "Closed"
-            name = common_ports[port] if port in common_ports else "Unknown"
-            print(f"{port} is {status.upper()}")
-            print(f"Service Name: {name}")
+            name = common_ports.get(port, "Unknown")
             with self.lock:
                 self.scan_results.append((port, status, name))
+            if status == "Open":
+                print(f"{port} is OPEN - {name}")
         except socket.error as e:
             print(f"Error scanning port {port}: {e}")
         finally:
@@ -99,24 +100,23 @@ class PortScanner(NetworkTool):
 
     def get_open_ports(self):
         results = self.scan_results
-        open_ports = [port for port, status, name in results if status == "Open"]
+        open_ports = [(port, status, name) for port, status, name in results if status == "Open"]
         return open_ports
     
-# Q2: Why do we use threading instead of scanning one port at a time?
-# Scanning ports one at a time means waiting for each connection timeout before moving to the next,
-# but With t hreading, all ports are scanned simultaneously
-
+    # Q2: Why do we use threading instead of scanning one port at a time?
+    # Scanning ports one at a time means waiting for each connection timeout before moving to the next,
+    # but With t hreading, all ports are scanned simultaneously
     def scan_range(self, start_port, end_port):
         
         threads = []
-        for port in range(start_port, end_port):
+        for port in range(start_port, end_port+1):
             t = threading.Thread(target=self.scan_port, args=(port,))
             threads.append(t)
         
         for t in threads: t.start()
         for t in threads: t.join()  
 
-    def save_results(target, results):
+    def save_results(self, target, results):
         try:
             timestamp = str(datetime.datetime.now())
             with sqlite3.connect(DB_NAME) as conn:
@@ -135,17 +135,17 @@ class PortScanner(NetworkTool):
                                     INSERT INTO scans (target, port, status, service, scan_date)
                                    VALUES (?,?,?,?,?)
                                     """, (target, port, status, service, timestamp))
-                cursor.commit()
+                conn.commit()
         except sqlite3.Error as e:
             print(f"Database Error: {e}")
 
-    def load_past_scans():
+    def load_past_scans(self):
         try:
             with sqlite3.connect(DB_NAME) as conn:
                 cursor = conn.cursor()
                 result = cursor.execute("SELECT * FROM scans")
                 past_scans = result.fetchall()
-                for target, port, status, service, scan_date in past_scans:
+                for _, target, port, status, service, scan_date in past_scans:
                     print(f"[{scan_date}] {target} : Port {port} ({service}) - {status}")
         except sqlite3.Error:
             print("No past scans found.")
@@ -184,10 +184,14 @@ if __name__ == "__main__":
             history = input("Would you like to see past scan history? (yes/no): ").strip()
             if history == "yes":
                 scanner.load_past_scans()
+            else:
+                exit
 
     except ValueError:
         print("Invalid input. Please enter a valid integer.")
 
 # Q5: New Feature Proposal
-# TODO: Your 2-3 sentence description here... (Part 2, Q5)
-# Diagram: See diagram_studentID.png in the repository root
+# A scan comparison feature that compares the current scan results with the previous scan
+# from the database and highlights any newly opened or closed ports.
+# It would use a list comprehension to find changes: new_ports = [p for p in current if p not in previous]
+# Diagram: See diagram_101591316.png in the repository root
